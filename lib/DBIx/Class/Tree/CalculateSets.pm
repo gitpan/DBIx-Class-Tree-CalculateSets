@@ -15,7 +15,7 @@ __PACKAGE__->mk_classdata (root_column => 'root');
 
 __PACKAGE__->mk_classdata (child_relation => 'children');
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub is_root {
   my ($self) = @_;
