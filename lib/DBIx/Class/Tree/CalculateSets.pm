@@ -15,7 +15,7 @@ __PACKAGE__->mk_classdata (root_column => 'root');
 
 __PACKAGE__->mk_classdata (child_relation => 'children');
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub is_root {
   my ($self) = @_;
@@ -42,15 +42,13 @@ sub _traverse_tree {
 
   foreach my $child ($self->search_related ($self->child_relation)->all) {
     $right = $child->_traverse_tree ($right);
-
-    $right++;
   }
 
   $self->set_column ($self->right_column,$right);
 
   $self->update;
 
-  return $right;
+  return $right + 1;
 }
 
 1;
@@ -65,14 +63,82 @@ DBIx::Class::Tree::CalculateSets
 
 =head1 SYNOPSIS
 
-  Better synopsis to come later, look at t/ for now.
+  # Imagine if you will, a database table looking somewhat like this:
+  # CREATE TABLE foo (
+  #   id     serial PRIMARY KEY,
+  #   parent integer,
+  #   root   integer,
+  #   lft    integer,
+  #   rgt    integer,
+  #   name   text,
+  # );
+
+  # And imagine we have a DBIx::Class::Result::Foo module containing
+  # among other things the following line:
+  #
+  # __PACKAGE__->load_components(qw/Tree::CalculateSets Core/);
+
+  my $rs = $schema->resultset ('Foo');
+
+  # An initial root node
+
+  my $root = $rs->create ({ name => 'root' });
+
+  # Make sure column 'root' is assigned. DBIx::Class can do this
+  # automagically for further children of the root node.
+
+  $root->update ({ root => $root->id });
+
+  # Create a few children from root
+
+  $root->children->create ({ name => 'level 2 a' });
+
+  my $child = $root->children->create ({ name => 'level 2 b' });
+
+  # Give one of the root children its own child node
+
+  my $child2 = $child->children->create ({ name => 'level 3' });
+
+  # This will populate the lft and rgt columns in the entire tree
+
+  $root->calculate_sets;
+
+  # Print $child and all its children. discard_changes is called so
+  # that our object is forced to retrieve the changes made by
+  # calculate_sets from the database.
+
+  $child->discard_changes;
+
+  print $_->name . "\n" for $rs->search ({
+      lft => { '>=' => $child->lft },
+      rgt => { '<=' => $child->rgt },
+    });
+
+  # Print all children of $root (Same results)
+
+  $root->discard_changes;
+
+  print $_->name . "\n" for $rs->search ({
+      lft => { '>' => $root->lft },
+      rgt => { '<' => $root->rgt },
+    });
+
+  # Print $child2 and all parents
+
+  $child2->discard_changes;
+
+  print $_->name . "\n" for $rs->search ({
+      lft => { '<=' => $child2->lft },
+      rgt => { '>=' => $child2->rgt },
+    });
 
 =head1 DESCRIPTION
 
 This is a small utility module that lets you calculate nested sets from
 an ordinary parent column based tree structure, allowing you to 
 trivially search an entire tree path. Note however, that constructing
-the search itself is outside the scope of this module.
+the search itself is outside the scope of this module, but the synopsis
+should hopefully give you a good idea of how to do it yourself.
 
 =head1 METHODS
 

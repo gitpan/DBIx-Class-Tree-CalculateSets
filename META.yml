@@ -23,4 +23,4 @@ no_index:
     - t
 requires:
   DBIx::Class: 0.08108
-version: 0.03
+version: 0.04
