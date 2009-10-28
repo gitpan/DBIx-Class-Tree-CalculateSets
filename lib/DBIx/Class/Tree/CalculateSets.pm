@@ -15,7 +15,7 @@ __PACKAGE__->mk_classdata (root_column => 'root');
 
 __PACKAGE__->mk_classdata (child_relation => 'children');
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub is_root {
   my ($self) = @_;
@@ -71,7 +71,8 @@ DBIx::Class::Tree::CalculateSets
 
 This is a small utility module that lets you calculate nested sets from
 an ordinary parent column based tree structure, allowing you to 
-trivially search an entire tree path.
+trivially search an entire tree path. Note however, that constructing
+the search itself is outside the scope of this module.
 
 =head1 METHODS
 
@@ -83,28 +84,28 @@ trivially search an entire tree path.
 
   __PACKAGE__->right_column('rgt'); # Also the default
 
-=head1 root_column
+=head2 root_column
 
-  __PACKAGE__->root_column ('root'); # Yes, 'root' is default
+  __PACKAGE__->root_column('root'); # Yes, 'root' is default
 
 The name of the column storing the id of the root column. Another way
 to think of this column is as the id of the tree the current node
 belongs to.
 
-=head1 child_relationship
+=head2 child_relationship
 
-  __PACKAGE__->child_relationship ('children'); # Yeah..
+  __PACKAGE__->child_relationship('children'); # Yeah..
 
 The name of the relationship used to find child nodes of the current 
 node.
 
-=head1 is_root
+=head2 is_root
 
   if ($node->is_root) { }
 
 Returns true if the current node is the root node.
 
-=head1 calculate_sets
+=head2 calculate_sets
 
   $root->calculate_sets;
 
